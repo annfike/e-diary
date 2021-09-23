@@ -9,10 +9,9 @@ import random
 import argparse
 
 
-commendations = ['Молодец!', 'Отлично!', 'Хорошо!', 'Гораздо лучше, чем я ожидал!', 
-                 'Ты меня приятно удивил!', 'Великолепно!', 'Прекрасно!', 'Ты меня очень обрадовал!', 
-                 'Именно этого я давно ждал от тебя!', 'Сказано здорово – просто и ясно!', 
-                 'Ты, как всегда, точен!', 'Очень хороший ответ!', 'Талантливо!',
+COMMENDATIONS = ['Молодец!', 'Отлично!', 'Хорошо!', 'Гораздо лучше, чем я ожидал!', 'Ты меня приятно удивил!',
+                 'Великолепно!', 'Прекрасно!', 'Ты меня очень обрадовал!', 'Именно этого я давно ждал от тебя!',
+                 'Сказано здорово – просто и ясно!', 'Ты, как всегда, точен!', 'Очень хороший ответ!', 'Талантливо!',
                  'Ты сегодня прыгнул выше головы!', 'Я поражен!', 'Уже существенно лучше!', 'Потрясающе!',
                  'Замечательно!', 'Прекрасное начало!', 'Так держать!', 'Ты на верном пути!', 'Здорово!',
                  'Это как раз то, что нужно!', 'Я тобой горжусь!', 'С каждым разом у тебя получается всё лучше!',
@@ -21,29 +20,28 @@ commendations = ['Молодец!', 'Отлично!', 'Хорошо!', 'Гор�
 
 
 def get_child(schoolkid):
-    child = Schoolkid.objects.get(full_name__contains=schoolkid, year_of_study=6, group_letter='А')
-    return child
+    schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid, year_of_study=6, group_letter='А')
+    return schoolkid
 
 
 def fix_marks(schoolkid):
-    child = get_child(schoolkid)
-    marks = Mark.objects.filter(schoolkid=child, points__lt=4)
+    marks = Mark.objects.filter(schoolkid=schoolkid, points__lt=4)
     for mark in marks:
         mark.points = 5
         mark.save()
 
 
 def remove_chastisements(schoolkid):
-    child = get_child(schoolkid)
-    notes = Chastisement.objects.filter(schoolkid=child)
+    notes = Chastisement.objects.filter(schoolkid=schoolkid)
     notes.delete()
 
 
 def create_commendation(schoolkid, subject):
-    child = get_child(schoolkid)
-    text = random.choice(commendations)
-    lesson = Lesson.objects.filter(year_of_study=6, group_letter='А', subject__title=subject).order_by('?').first()
-    Commendation.objects.create(text=text, created=lesson.date, schoolkid=child, subject=lesson.subject, teacher=lesson.teacher)
+    text = random.choice(COMMENDATIONS)
+    subject = Subject.objects.get(title=subject, year_of_study=6)
+    print(subject)
+    lesson = Lesson.objects.filter(year_of_study=6, group_letter='А', subject=subject).order_by('?').first()
+    Commendation.objects.create(text=text, created=lesson.date, schoolkid=schoolkid, subject=lesson.subject, teacher=lesson.teacher)
 
 
 def main():
@@ -56,8 +54,7 @@ def main():
 
 
     try:
-        get_child(schoolkid)
-        Subject.objects.get(title=subject, year_of_study=6)
+        schoolkid = get_child(schoolkid)
         fix_marks(schoolkid)
         remove_chastisements(schoolkid)
         create_commendation(schoolkid, subject)
@@ -71,4 +68,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
